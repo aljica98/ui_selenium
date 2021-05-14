@@ -17,19 +17,20 @@ import numpy as np
 from google.cloud import storage
 import logging
 
+output_directory = '/home/ajimenez/'
 
 print('Starting Process')
 print('Checking if there are duplicated files in the folder...')
 paths = []
-for row in os.listdir('/home/ajimenez/ui-automation'):
+for row in os.listdir(output_directory+'ui-automation'):
     if 'r539cy' in row:
-        paths.append('/home/ajimenez/ui-automation/'+row)
+        paths.append(output_directory+'ui-automation/'+row)
         
 for path in paths:
     os.remove(path)
     print('Erasing duplicated file!')
 
-out_path='/home/ajimenez/ui-automation'
+out_path=output_directory+'ui-automation'
 options = Options()
 options.add_argument('--headless')
 options.add_argument('--disable-dev-shm-usage')
@@ -38,9 +39,9 @@ options.add_argument('--disable-gpu')
 prefs = {'download.default_directory' : out_path}
 options.add_experimental_option('prefs', prefs)
 # options.add_experimental_option('service_log_path':'/dev/null')
-download_path = '/home/ajimenez/ui-automation'
+download_path = output_directory+'ui-automation'
 
-driver = webdriver.Chrome('/home/ajimenez/.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver',options=options)
+driver = webdriver.Chrome(output_directory+'.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver',options=options)
 #driver = webdriver.Chrome(ChromeDriverManager().install(),options=options)
 
 driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')
@@ -49,7 +50,7 @@ command_result = driver.execute("send_command", params)
 
 #Following Code is for State Level
 
-print('Opening Selenium Driver to fill automatically the form - State Level')
+print(opening Selenium Driver to fill automatically the form - State Level')
 
 driver.get('https://oui.doleta.gov/unemploy/claims.asp')
 print('This may take a while, please wait :)')
@@ -112,12 +113,12 @@ print('Closing Selenium Driver - State Level')
 isDir = os.path.isdir(path)
 
 if isDir:
-    shutil.move("/home/ajimenez/ui-automation/r539cy.xml", "/home/ajimenez/ui-automation/UI_Weekly/Unemployment_Insurance_Weekly_Claims_State_"+str(today.year)+str(today.month)+str(today.day)+".xml")
+    shutil.move(output_directory+'ui-automation/r539cy.xml', output_directory+"ui-automation/UI_Weekly/Unemployment_Insurance_Weekly_Claims_State_"+str(today.year)+str(today.month)+str(today.day)+".xml")
     select_filter.append('State')
     print('Moving State XML to UI Directory\n')
 else:
     os.mkdir(path)
-    shutil.move("/home/ajimenez/ui-automation/r539cy.xml", "/home/ajimenez/ui-automation/UI_Weekly/Unemployment_Insurance_Weekly_Claims_State_"+str(today.year)+str(today.month)+str(today.day)+".xml")
+    shutil.move(output_directory+'ui-automation/r539cy.xml', output_directory+"ui-automation/UI_Weekly/Unemployment_Insurance_Weekly_Claims_State_"+str(today.year)+str(today.month)+str(today.day)+".xml")
     select_filter.append('State')
     print('Moving State XML to UI Directory\n')
 
@@ -125,10 +126,10 @@ print('Starting DataFrame Creation\n')
 
 #This list of paths takes the name of the files to see wich one State to validate it later
 paths_ui = []
-for row in os.listdir('/home/ajimenez/ui-automation/UI_Weekly'):
+for row in os.listdir(output_directory+'ui-automation/UI_Weekly'):
     act_date = str(today.year)+str(today.month)+str(today.day)
     if act_date in row:
-        paths_ui.append('/home/ajimenez/ui-automation/UI_Weekly/'+row)
+        paths_ui.append(output_directory+'ui-automation/UI_Weekly/'+row)
 
 #This is an array that will have dataframes inside 
 df_list = []
@@ -170,7 +171,7 @@ print('\n\nStarting Report Creation/Format')
 #So it creates an xls file with the date of creation and then it attach each dataframe to a sheet of the file
 
 book = Workbook()
-writer = pd.ExcelWriter('/home/ajimenez/ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx", engine='openpyxl')
+writer = pd.ExcelWriter(output_directory+'ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx", engine='openpyxl')
 writer.book = book
 print('Creating jobless claim weekly File')
 for data in df_list:
@@ -183,13 +184,13 @@ for data in df_list:
 writer.save()
 
 print('\n\nCreating CSV File...')
-base = pd.read_excel('/home/ajimenez/ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx", sheet_name='State UI')
+base = pd.read_excel(output_directory+'ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx", sheet_name='State UI')
 base = base[['stateName','weekEnded','InitialClaims','ReflectingWeekEnded','ContinuedClaims','CoveredEmployment','InsuredUnemploymentRate']]
 len(base.columns)
 
 base = base.rename(columns = {'stateName':'State','weekEnded':'Filed week ended','InitialClaims':'Initial Claims','ReflectingWeekEnded': 'Reflecting Week Ended','ContinuedClaims':'Continued Claims','CoveredEmployment':'Covered Employment','InsuredUnemploymentRate':'Insured Unemployment Rate'}, inplace = False)
-base.to_csv('/home/ajimenez/ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".csv",index=False)
-os.remove('/home/ajimenez/ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx")
+base.to_csv(output_directory+'ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".csv",index=False)
+os.remove(output_directory+'ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".xlsx")
 print('DONE CREATING CSV FILE\n\n')
 
 print('\n\nUploading the report to the Bucket\n\n')
@@ -208,6 +209,6 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
             source_file_name, destination_blob_name
         )
     )
-upload_blob('unemployment-insurance-buck', '/home/ajimenez/ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".csv","jobless claim weekly "+str(today.year)+str(today.month)+str(today.day)+".csv")
+upload_blob('unemployment-insurance-buck', output_directory+'ui-automation/jobless claim weekly '+str(today.year)+str(today.month)+str(today.day)+".csv","jobless claim weekly "+str(today.year)+str(today.month)+str(today.day)+".csv")
 print('-------------------UPLOADED SUCCESFULLY TO BUCKET---------------------')
 
