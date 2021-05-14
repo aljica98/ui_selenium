@@ -7,5 +7,5 @@ The start and stop python files are for the Cloud Functions, the parameters need
 
 Requirement.txt are the dependencies and libraries for the cloud function code.
 
-The bash code is to insert it in the VM you have the python code, remember to adapt the directory route to your environment.
+The bash code is the startup script to insert it in the VM where you have the python code, remember to adapt the directory route to your environment.
 
